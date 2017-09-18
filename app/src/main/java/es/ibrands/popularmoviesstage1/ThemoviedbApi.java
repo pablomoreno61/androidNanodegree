@@ -20,7 +20,7 @@ import java.util.ArrayList;
 public class ThemoviedbApi
 {
     /* TODO: Populate API_KEY with your own api key */
-    private static final String API_KEY = "[API_KEY]";
+    private static final String API_KEY = BuildConfig.API_KEY;
 
     private static final String API_URL = "http://api.themoviedb.org/3/movie/";
 
