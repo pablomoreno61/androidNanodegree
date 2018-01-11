@@ -34,6 +34,10 @@ public class ThemoviedbApi
             inputStream = urlConnection.getInputStream();
 
             movies = parseMovies(stringify(inputStream));
+
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
         } catch(Exception e) {
             Log.e("ERROR", e.getMessage(), e);
         } finally {
@@ -60,12 +64,12 @@ public class ThemoviedbApi
             for (int i = 0; i < array.length(); i++) {
                 JSONObject jsonMovieObject = array.getJSONObject(i);
                 Movie movie = new Movie(
-                        jsonMovieObject.getString("vote_average"),
-                        jsonMovieObject.getString("id"),
-                        jsonMovieObject.getString("title"),
-                        jsonMovieObject.getString("overview"),
-                        jsonMovieObject.getString("poster_path"),
-                        jsonMovieObject.getString("release_date")
+                    jsonMovieObject.getString("vote_average"),
+                    jsonMovieObject.getString("id"),
+                    jsonMovieObject.getString("title"),
+                    jsonMovieObject.getString("overview"),
+                    jsonMovieObject.getString("poster_path"),
+                    jsonMovieObject.getString("release_date")
                 );
 
                 movies.add(movie);
@@ -102,6 +106,10 @@ public class ThemoviedbApi
 
             ArrayList<Review> reviews = getReviews(movieRef + "/reviews");
             movie.setReviews(reviews);
+
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
         } catch(Exception e) {
             Log.e("ERROR", e.getMessage(), e);
         } finally {
@@ -125,12 +133,12 @@ public class ThemoviedbApi
             JSONObject jsonObject = new JSONObject(result);
 
             movie = new Movie(
-                    jsonObject.getString("vote_average"),
-                    jsonObject.getString("id"),
-                    jsonObject.getString("title"),
-                    jsonObject.getString("overview"),
-                    jsonObject.getString("poster_path"),
-                    jsonObject.getString("release_date")
+                jsonObject.getString("vote_average"),
+                jsonObject.getString("id"),
+                jsonObject.getString("title"),
+                jsonObject.getString("overview"),
+                jsonObject.getString("poster_path"),
+                jsonObject.getString("release_date")
             );
 
             movie.setRuntime(jsonObject.getString("runtime"));
@@ -152,6 +160,10 @@ public class ThemoviedbApi
             inputStream = urlConnection.getInputStream();
 
             trailers = parseTrailers(stringify(inputStream));
+
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
         } catch(Exception e) {
             Log.e("ERROR", e.getMessage(), e);
         } finally {
@@ -203,6 +215,10 @@ public class ThemoviedbApi
             inputStream = urlConnection.getInputStream();
 
             reviews = parseReviews(stringify(inputStream));
+
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
         } catch(Exception e) {
             Log.e("ERROR", e.getMessage(), e);
         } finally {
@@ -272,10 +288,6 @@ public class ThemoviedbApi
             Log.d("url", e.getMessage());
         } catch(Exception e) {
             Log.e("ERROR", e.getMessage(), e);
-        } finally {
-            if (urlConnection != null) {
-                urlConnection.disconnect();
-            }
         }
 
         return urlConnection;
