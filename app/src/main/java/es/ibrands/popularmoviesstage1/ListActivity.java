@@ -19,6 +19,10 @@ public class ListActivity extends AppCompatActivity implements AdapterView.OnIte
 {
     private static final String MOST_POPULAR_SORT_METHOD = "popular";
     private static final String TOP_RATED_SORT_METHOD = "top_rated";
+    private static final String FAVORITE_MOVIES_METHOD = "favorite";
+
+    private final String STATE_SORT_METHOD = "sortMethod";
+    private String mCurrentSortMethod;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -51,15 +55,28 @@ public class ListActivity extends AppCompatActivity implements AdapterView.OnIte
         int id = item.getItemId();
 
         if (id == R.id.top_rated_sort_method) {
-            new Api().execute(TOP_RATED_SORT_METHOD);
+            mCurrentSortMethod = TOP_RATED_SORT_METHOD;
         } else if (id == R.id.most_popular_sort_method) {
-            new Api().execute(MOST_POPULAR_SORT_METHOD);
+            mCurrentSortMethod = MOST_POPULAR_SORT_METHOD;
         } else if (id == R.id.favorite_movie_method) {
+            mCurrentSortMethod = FAVORITE_MOVIES_METHOD;
+        }
+
+        doAction();
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void doAction()
+    {
+        if (mCurrentSortMethod == TOP_RATED_SORT_METHOD) {
+            new Api().execute(TOP_RATED_SORT_METHOD);
+        } else if (mCurrentSortMethod == MOST_POPULAR_SORT_METHOD) {
+            new Api().execute(MOST_POPULAR_SORT_METHOD);
+        } else if (mCurrentSortMethod == FAVORITE_MOVIES_METHOD) {
             Intent intent = new Intent(this, FavoriteActivity.class);
             startActivity(intent);
         }
-
-        return super.onOptionsItemSelected(item);
     }
 
     private class Api extends AsyncTask<String, Object, Object>
@@ -113,5 +130,26 @@ public class ListActivity extends AppCompatActivity implements AdapterView.OnIte
         intent.putExtra(DetailActivity.EXTRA_PARAM_ID, movie.getId());
 
         startActivity(intent);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState)
+    {
+        // Save the user's current game state
+        savedInstanceState.putString(STATE_SORT_METHOD, mCurrentSortMethod);
+
+        // Always call the superclass so it can save the view hierarchy state
+        super.onSaveInstanceState(savedInstanceState);
+    }
+
+    public void onRestoreInstanceState(Bundle savedInstanceState)
+    {
+        // Always call the superclass so it can restore the view hierarchy
+        super.onRestoreInstanceState(savedInstanceState);
+
+        // Restore state members from saved instance
+        mCurrentSortMethod = savedInstanceState.getString(STATE_SORT_METHOD);
+
+        doAction();
     }
 }
