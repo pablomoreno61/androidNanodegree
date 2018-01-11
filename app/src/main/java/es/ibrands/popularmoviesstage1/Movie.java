@@ -1,5 +1,7 @@
 package es.ibrands.popularmoviesstage1;
 
+import java.util.ArrayList;
+
 public class Movie
 {
     private final String averageScore;
@@ -9,6 +11,8 @@ public class Movie
     private final String posterPath; // drawable reference id
     private final String releaseAt;
     private String runtime = "0";
+    private ArrayList<Trailer> trailers;
+    private ArrayList<Review> reviews;
 
     public Movie(
         String averageScore,
@@ -58,4 +62,10 @@ public class Movie
 
     public void setRuntime(String runtime) { this.runtime = runtime; }
     public String getRuntime() { return runtime; }
+
+    public void setTrailers(ArrayList<Trailer> trailers) { this.trailers = trailers; }
+    public ArrayList<Trailer> getTrailers() { return trailers; }
+
+    public void setReviews(ArrayList<Review> reviews) { this.reviews = reviews; }
+    public ArrayList<Review> getReviews() { return reviews; }
 }

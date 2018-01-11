@@ -1,9 +1,11 @@
 <resources>
     <string name="app_name">Popular Stages 1</string>
     <string name="activity_list_title">Pop Movies</string>
-    <string name="activity_detail_title">MovieDetail</string>
+    <string name="activity_detail_title">Movie detail</string>
+    <string name="activity_favorite_title">Favorite movies</string>
     <string name="most_popular_sort_method">Most popular</string>
     <string name="top_rated_sort_method">Top rated</string>
+    <string name="favorite_movie_method">Favorite movies</string>
     <string name="movie_thumb_image">Image</string>
     <string name="movie_title">Title</string>
     <string name="movie_description">Description</string>
@@ -13,4 +15,8 @@
     <string name="movie_vote_average">Average score</string>
     <string name="movie_vote_average_text">%1$s/10</string>
     <string name="no_internet_connection">No internet connection</string>
+    <string name="trailer_label">Trailers:</string>
+    <string name="mark_as_favorite_button_text">MARK AS FAVORITE</string>
+    <string name="marked_as_favorite_button_text">MARKED AS FAVORITE</string>
+    <string name="review_label">Reviews:</string>
 </resources>

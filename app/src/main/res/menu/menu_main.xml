@@ -10,4 +10,8 @@
         android:title="@string/top_rated_sort_method"
         android:orderInCategory="100"
         app:showAsAction="never"/>
+    <item android:id="@+id/favorite_movie_method"
+        android:title="@string/favorite_movie_method"
+        android:orderInCategory="100"
+        app:showAsAction="never"/>
 </menu>

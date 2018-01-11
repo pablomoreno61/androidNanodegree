@@ -54,6 +54,9 @@ public class ListActivity extends AppCompatActivity implements AdapterView.OnIte
             new Api().execute(TOP_RATED_SORT_METHOD);
         } else if (id == R.id.most_popular_sort_method) {
             new Api().execute(MOST_POPULAR_SORT_METHOD);
+        } else if (id == R.id.favorite_movie_method) {
+            Intent intent = new Intent(this, FavoriteActivity.class);
+            startActivity(intent);
         }
 
         return super.onOptionsItemSelected(item);
@@ -95,8 +98,8 @@ public class ListActivity extends AppCompatActivity implements AdapterView.OnIte
 
         thumbView.setOnItemClickListener(this);
 
-        ThemoviedbAdapter themoviedbAdapter = new ThemoviedbAdapter(this, movies);
-        thumbView.setAdapter(themoviedbAdapter);
+        MovieListAdapter movieListAdapter = new MovieListAdapter(this, movies);
+        thumbView.setAdapter(movieListAdapter);
 
         setContentView(thumbView);
     }

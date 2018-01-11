@@ -5,4 +5,8 @@
     <color name="colorAccent">#FF4081</color>
     <color name="bgMovieTitle">#009688</color>
     <color name="fontMovieTitle">#FFFFFF</color>
+    <color name="movieDivider">#000000</color>
+    <color name="fontFavoriteTitle">#949393</color>
+    <color name="bgFavoriteButton">#2CF2DE</color>
+    <color name="bgMarkedFavoriteButton">#f2de2c</color>
 </resources>

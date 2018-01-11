@@ -19,36 +19,9 @@ import java.util.ArrayList;
 
 public class ThemoviedbApi
 {
-    /* TODO: Populate API_KEY with your own api key */
     private static final String API_KEY = BuildConfig.API_KEY;
 
     private static final String API_URL = "http://api.themoviedb.org/3/movie/";
-
-    public Movie getMovie(String movieRef)
-    {
-        Movie movie = null;
-        InputStream inputStream = null;
-
-        try {
-            HttpURLConnection urlConnection = query(movieRef);
-
-            inputStream = urlConnection.getInputStream();
-
-            movie = parseMovie(stringify(inputStream));
-        } catch(Exception e) {
-            Log.e("ERROR", e.getMessage(), e);
-        } finally {
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch(IOException e) {
-                    Log.e("ERROR", e.getMessage(), e);
-                }
-            }
-        }
-
-        return movie;
-    }
 
     public ArrayList<Movie> getMovies(String viewMode)
     {
@@ -74,6 +47,201 @@ public class ThemoviedbApi
         }
 
         return movies;
+    }
+
+    private ArrayList<Movie> parseMovies(String result)
+    {
+        ArrayList<Movie> movies = new ArrayList<>();
+
+        try {
+            JSONObject jsonObject = new JSONObject(result);
+            JSONArray array = (JSONArray) jsonObject.get("results");
+
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject jsonMovieObject = array.getJSONObject(i);
+                Movie movie = new Movie(
+                        jsonMovieObject.getString("vote_average"),
+                        jsonMovieObject.getString("id"),
+                        jsonMovieObject.getString("title"),
+                        jsonMovieObject.getString("overview"),
+                        jsonMovieObject.getString("poster_path"),
+                        jsonMovieObject.getString("release_date")
+                );
+
+                movies.add(movie);
+            }
+        } catch(JSONException e) {
+            Log.d("ERROR", "Error parsing JSON. String was: " + result);
+        }
+
+        return movies;
+    }
+
+    private String stringify(InputStream stream) throws IOException
+    {
+        Reader reader = new InputStreamReader(stream, "UTF-8");
+        BufferedReader bufferedReader = new BufferedReader(reader);
+
+        return bufferedReader.readLine();
+    }
+
+    public Movie getMovie(String movieRef)
+    {
+        Movie movie = null;
+        InputStream inputStream = null;
+
+        try {
+            HttpURLConnection urlConnection = query(movieRef);
+
+            inputStream = urlConnection.getInputStream();
+
+            movie = parseMovie(stringify(inputStream));
+
+            ArrayList<Trailer> trailers = getTrailers(movieRef + "/videos");
+            movie.setTrailers(trailers);
+
+            ArrayList<Review> reviews = getReviews(movieRef + "/reviews");
+            movie.setReviews(reviews);
+        } catch(Exception e) {
+            Log.e("ERROR", e.getMessage(), e);
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch(IOException e) {
+                    Log.e("ERROR", e.getMessage(), e);
+                }
+            }
+        }
+
+        return movie;
+    }
+
+    private Movie parseMovie(String result)
+    {
+        Movie movie = null;
+
+        try {
+            JSONObject jsonObject = new JSONObject(result);
+
+            movie = new Movie(
+                    jsonObject.getString("vote_average"),
+                    jsonObject.getString("id"),
+                    jsonObject.getString("title"),
+                    jsonObject.getString("overview"),
+                    jsonObject.getString("poster_path"),
+                    jsonObject.getString("release_date")
+            );
+
+            movie.setRuntime(jsonObject.getString("runtime"));
+        } catch(JSONException e) {
+            Log.d("ERROR", "Error parsing JSON. String was: " + result);
+        }
+
+        return movie;
+    }
+
+    public ArrayList<Trailer> getTrailers(String viewMode)
+    {
+        ArrayList<Trailer> trailers = new ArrayList<>();
+        InputStream inputStream = null;
+
+        try {
+            HttpURLConnection urlConnection = query(viewMode);
+
+            inputStream = urlConnection.getInputStream();
+
+            trailers = parseTrailers(stringify(inputStream));
+        } catch(Exception e) {
+            Log.e("ERROR", e.getMessage(), e);
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch(IOException e) {
+                    Log.e("ERROR", e.getMessage(), e);
+                }
+            }
+        }
+
+        return trailers;
+    }
+
+    private ArrayList<Trailer> parseTrailers(String result)
+    {
+        ArrayList<Trailer> trailers = new ArrayList<>();
+
+        try {
+            JSONObject jsonObject = new JSONObject(result);
+            JSONArray array = (JSONArray) jsonObject.get("results");
+
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject jsonMovieObject = array.getJSONObject(i);
+                Trailer trailer = new Trailer(
+                    jsonMovieObject.getString("id"),
+                    jsonMovieObject.getString("name"),
+                    jsonMovieObject.getString("key")
+                );
+
+                trailers.add(trailer);
+            }
+        } catch(JSONException e) {
+            Log.d("ERROR", "Error parsing JSON. String was: " + result);
+        }
+
+        return trailers;
+    }
+
+    public ArrayList<Review> getReviews(String viewMode)
+    {
+        ArrayList<Review> reviews = new ArrayList<>();
+        InputStream inputStream = null;
+
+        try {
+            HttpURLConnection urlConnection = query(viewMode);
+
+            inputStream = urlConnection.getInputStream();
+
+            reviews = parseReviews(stringify(inputStream));
+        } catch(Exception e) {
+            Log.e("ERROR", e.getMessage(), e);
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch(IOException e) {
+                    Log.e("ERROR", e.getMessage(), e);
+                }
+            }
+        }
+
+        return reviews;
+    }
+
+    private ArrayList<Review> parseReviews(String result)
+    {
+        ArrayList<Review> reviews = new ArrayList<>();
+
+        try {
+            JSONObject jsonObject = new JSONObject(result);
+            JSONArray array = (JSONArray) jsonObject.get("results");
+
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject jsonMovieObject = array.getJSONObject(i);
+                Review review = new Review(
+                    jsonMovieObject.getString("id"),
+                    jsonMovieObject.getString("author"),
+                    jsonMovieObject.getString("content"),
+                    jsonMovieObject.getString("url")
+                );
+
+                reviews.add(review);
+            }
+        } catch(JSONException e) {
+            Log.d("ERROR", "Error parsing JSON. String was: " + result);
+        }
+
+        return reviews;
     }
 
     /**
@@ -111,65 +279,5 @@ public class ThemoviedbApi
         }
 
         return urlConnection;
-    }
-
-    private ArrayList<Movie> parseMovies(String result)
-    {
-        ArrayList<Movie> movies = new ArrayList<>();
-
-        try {
-            JSONObject jsonObject = new JSONObject(result);
-            JSONArray array = (JSONArray) jsonObject.get("results");
-
-            for (int i = 0; i < array.length(); i++) {
-                JSONObject jsonMovieObject = array.getJSONObject(i);
-                Movie movie = new Movie(
-                        jsonMovieObject.getString("vote_average"),
-                        jsonMovieObject.getString("id"),
-                        jsonMovieObject.getString("title"),
-                        jsonMovieObject.getString("overview"),
-                        jsonMovieObject.getString("poster_path"),
-                        jsonMovieObject.getString("release_date")
-                );
-
-                movies.add(movie);
-            }
-        } catch(JSONException e) {
-            Log.d("ERROR", "Error parsing JSON. String was: " + result);
-        }
-
-        return movies;
-    }
-
-    private Movie parseMovie(String result)
-    {
-        Movie movie = null;
-
-        try {
-            JSONObject jsonObject = new JSONObject(result);
-
-            movie = new Movie(
-                jsonObject.getString("vote_average"),
-                jsonObject.getString("id"),
-                jsonObject.getString("title"),
-                jsonObject.getString("overview"),
-                jsonObject.getString("poster_path"),
-                jsonObject.getString("release_date")
-            );
-
-            movie.setRuntime(jsonObject.getString("runtime"));
-        } catch(JSONException e) {
-            Log.d("ERROR", "Error parsing JSON. String was: " + result);
-        }
-
-        return movie;
-    }
-
-    private String stringify(InputStream stream) throws IOException
-    {
-        Reader reader = new InputStreamReader(stream, "UTF-8");
-        BufferedReader bufferedReader = new BufferedReader(reader);
-
-        return bufferedReader.readLine();
     }
 }
