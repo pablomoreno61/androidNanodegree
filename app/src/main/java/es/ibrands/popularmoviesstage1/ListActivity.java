@@ -6,6 +6,8 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -13,6 +15,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.LinearLayout;
+
 import java.util.ArrayList;
 
 public class ListActivity extends AppCompatActivity implements AdapterView.OnItemClickListener
@@ -112,7 +116,7 @@ public class ListActivity extends AppCompatActivity implements AdapterView.OnIte
         thumbView.setHorizontalSpacing(0);
         thumbView.setVerticalSpacing(0);
         thumbView.setStretchMode(GridView.STRETCH_COLUMN_WIDTH);
-
+        thumbView.setSaveEnabled(true);
         thumbView.setOnItemClickListener(this);
 
         MovieListAdapter movieListAdapter = new MovieListAdapter(this, movies);
@@ -151,5 +155,43 @@ public class ListActivity extends AppCompatActivity implements AdapterView.OnIte
         mCurrentSortMethod = savedInstanceState.getString(STATE_SORT_METHOD);
 
         doAction();
+    }
+
+    public static class SavedState extends android.view.View.BaseSavedState
+    {
+        public int mScrollPosition;
+
+        SavedState(Parcel in)
+        {
+            super(in);
+            mScrollPosition = in.readInt();
+        }
+
+        SavedState(Parcelable superState)
+        {
+            super(superState);
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags)
+        {
+            super.writeToParcel(dest, flags);
+            dest.writeInt(mScrollPosition);
+        }
+
+        public static final Parcelable.Creator<SavedState> CREATOR = new Parcelable.Creator<SavedState>()
+        {
+            @Override
+            public SavedState createFromParcel(Parcel in)
+            {
+                return new SavedState(in);
+            }
+
+            @Override
+            public SavedState[] newArray(int size)
+            {
+                return new SavedState[size];
+            }
+        };
     }
 }

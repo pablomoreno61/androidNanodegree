@@ -264,13 +264,12 @@ public class DetailActivity extends AppCompatActivity
         String columnId = FavoriteMovieContract.FavoriteMovieEntry.COLUMN_MOVIE_ID;
         String[] fields = new String[] {columnId};
         String[] criteria = new String[] {movieId};
-        Cursor mCursor = mDb.query(
-            FavoriteMovieContract.FavoriteMovieEntry.TABLE_NAME,
+
+        Cursor mCursor = getContentResolver().query(
+            FavoriteMovieContract.FavoriteMovieEntry.CONTENT_URI,
             fields,
             columnId + "=?",
             criteria,
-            null,
-            null,
             FavoriteMovieContract.FavoriteMovieEntry.COLUMN_TIMESTAMP
         );
 
@@ -308,24 +307,31 @@ public class DetailActivity extends AppCompatActivity
         private void addFavoriteMovie(String movieId)
         {
             // to pass the values onto the insert query
-            ContentValues cv = new ContentValues();
+            ContentValues contentValues = new ContentValues();
 
             TextView titleTextView = (TextView) findViewById(R.id.movie_detail_title);
             String title = titleTextView.getText().toString();
 
-            cv.put(FavoriteMovieContract.FavoriteMovieEntry.COLUMN_MOVIE_ID, Integer.parseInt(movieId));
-            cv.put(FavoriteMovieContract.FavoriteMovieEntry.COLUMN_TITLE, title);
+            contentValues.put(
+                FavoriteMovieContract.FavoriteMovieEntry.COLUMN_MOVIE_ID, Integer.parseInt(movieId)
+            );
 
-            mDb.insert(FavoriteMovieContract.FavoriteMovieEntry.TABLE_NAME, null, cv);
+            contentValues.put(
+                FavoriteMovieContract.FavoriteMovieEntry.COLUMN_TITLE, title
+            );
+
+            Uri uri = getContentResolver().insert(
+                FavoriteMovieContract.FavoriteMovieEntry.CONTENT_URI,
+                contentValues
+            );
         }
 
         private void removeFavoriteMovie(String movieId)
         {
-            mDb.delete(
-                FavoriteMovieContract.FavoriteMovieEntry.TABLE_NAME,
-                FavoriteMovieContract.FavoriteMovieEntry.COLUMN_MOVIE_ID + "=" + movieId,
-                null
-            );
+            Uri uri = FavoriteMovieContract.FavoriteMovieEntry.CONTENT_URI;
+            uri = uri.buildUpon().appendPath(movieId).build();
+
+            getContentResolver().delete(uri, null, null);
         }
     };
 }
