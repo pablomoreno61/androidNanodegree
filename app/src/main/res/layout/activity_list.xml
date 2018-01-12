@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <android.support.v7.widget.RecyclerView
+    <es.ibrands.popularmoviesstage1.MovieListRecyclerView
         android:id="@+id/recyclerview_movies"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

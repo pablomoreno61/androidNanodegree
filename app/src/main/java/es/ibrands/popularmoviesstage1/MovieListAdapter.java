@@ -95,6 +95,8 @@ public class MovieListAdapter extends RecyclerView.Adapter<MovieListAdapter.Movi
         Context context = movieAdapterViewHolder.thumbView.getContext();
         Picasso.with(context)
             .load(THUMB_BASE_URL + "/" + THUMB_SIZE + movie.getPosterPath())
+            // .placeholder(R.drawable.user_placeholder)
+            // .error(R.drawable.user_placeholder_error)
             .into(movieAdapterViewHolder.thumbView);
     }
 
