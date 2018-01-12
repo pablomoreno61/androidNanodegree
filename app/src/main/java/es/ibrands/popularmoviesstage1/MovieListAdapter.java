@@ -1,67 +1,113 @@
 package es.ibrands.popularmoviesstage1;
 
-import android.app.Activity;
+import android.content.ContentUris;
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 
 import com.squareup.picasso.Picasso;
 
-import java.util.List;
+import java.util.ArrayList;
 
-public class MovieListAdapter extends ArrayAdapter<Movie>
+public class MovieListAdapter extends RecyclerView.Adapter<MovieListAdapter.MovieListViewHolder>
 {
+    private final Context mContext;
+
     public static final String THUMB_BASE_URL = "http://image.tmdb.org/t/p/";
     public static final String THUMB_SIZE = "w185";
 
-    /**
-     * This is our own custom constructor (it doesn't mirror a superclass constructor).
-     * The context is used to inflate the layout file, and the List is the data we want
-     * to populate into the lists
-     *
-     * @param context The current context. Used to inflate the layout file.
-     * @param movies A List of Movie objects to display in a list
+    private ArrayList<Movie> mMovies;
+
+    /*
+     * Below, we've defined an interface to handle clicks on items within this Adapter. In the
+     * constructor of our ForecastAdapter, we receive an instance of a class that has implemented
+     * said interface. We store that instance in this variable to call the onClick method whenever
+     * an item is clicked in the list.
      */
-    public MovieListAdapter(Activity context, List<Movie> movies)
+    final private MovieListAdapterOnClickHandler mClickHandler;
+
+    /**
+     * The interface that receives onClick messages.
+     */
+    public interface MovieListAdapterOnClickHandler
     {
-        // Here, we initialize the ArrayAdapter's internal storage for the context and the list.
-        // the second argument is used when the ArrayAdapter is populating a single TextView.
-        // Because this is a custom adapter for two TextViews and an ImageView, the adapter is not
-        // going to use this second argument, so it can be any value. Here, we used 0.
-        super(context, 0, movies);
+        void onClick(Movie movie);
     }
 
-    /**
-     * Provides a view for an AdapterView (ListView, GridView, etc.)
-     *
-     * @param position The AdapterView position that is requesting a view
-     * @param convertView The recycled view to populate.
-     *                    (search online for "android view recycling" to learn more)
-     * @param parent The parent ViewGroup that is used for inflation.
-     * @return The View for the position in the AdapterView.
-     */
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent)
+    public MovieListAdapter(@NonNull Context context, MovieListAdapterOnClickHandler clickHandler)
     {
-        // Gets the Movie object from the ArrayAdapter at the appropriate position
-        Movie movie = getItem(position);
+        mContext = context;
+        mClickHandler = clickHandler;
+    }
 
-        Context context = getContext();
+    public class MovieListViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener
+    {
+        public final ImageView thumbView;
 
-        // Adapters recycle views to AdapterViews.
-        // If this is a new View object we're getting, then inflate the layout.
-        // If not, this view already has the layout inflated from a previous call to getView,
-        // and we modify the View widgets as usual.
-        if (convertView == null) {
-            convertView = LayoutInflater.from(context).inflate(R.layout.movie_list_item, parent, false);
+        public MovieListViewHolder(View view)
+        {
+            super(view);
+
+            thumbView = (ImageView) view.findViewById(R.id.movie_list_thumb);
+
+            view.setOnClickListener(this);
         }
 
-        ImageView thumbView = (ImageView) convertView.findViewById(R.id.movie_list_thumb);
-        Picasso.with(context).load(THUMB_BASE_URL + "/" + THUMB_SIZE + movie.getPosterPath()).into(thumbView);
+        /**
+         * This gets called by the child views during a click. We fetch the date that has been
+         * selected, and then call the onClick handler registered with this adapter, passing that
+         * date.
+         *
+         * @param v the View that was clicked
+         */
+        @Override
+        public void onClick(View v)
+        {
+            int position = getAdapterPosition();
 
-        return convertView;
+            Movie movie = mMovies.get(position);
+
+            mClickHandler.onClick(movie);
+        }
+    }
+
+    @Override
+    public MovieListViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType)
+    {
+        Context context = viewGroup.getContext();
+        int layoutIdForListItem = R.layout.movie_list_item;
+        LayoutInflater inflater = LayoutInflater.from(context);
+        boolean shouldAttachToParentImmediately = false;
+
+        View view = inflater.inflate(layoutIdForListItem, viewGroup, shouldAttachToParentImmediately);
+        return new MovieListViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(MovieListViewHolder movieAdapterViewHolder, int position)
+    {
+        Movie movie = mMovies.get(position);
+
+        Context context = movieAdapterViewHolder.thumbView.getContext();
+        Picasso.with(context)
+            .load(THUMB_BASE_URL + "/" + THUMB_SIZE + movie.getPosterPath())
+            .into(movieAdapterViewHolder.thumbView);
+    }
+
+    @Override
+    public int getItemCount()
+    {
+        if (null == mMovies) return 0;
+        return mMovies.size();
+    }
+
+    public void setData(ArrayList<Movie> movies)
+    {
+        mMovies = movies;
+        notifyDataSetChanged();
     }
 }

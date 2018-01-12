@@ -9,17 +9,15 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.GridView;
-import android.widget.LinearLayout;
 
 import java.util.ArrayList;
 
-public class ListActivity extends AppCompatActivity implements AdapterView.OnItemClickListener
+public class ListActivity extends AppCompatActivity implements MovieListAdapter.MovieListAdapterOnClickHandler
 {
     private static final String MOST_POPULAR_SORT_METHOD = "popular";
     private static final String TOP_RATED_SORT_METHOD = "top_rated";
@@ -28,12 +26,23 @@ public class ListActivity extends AppCompatActivity implements AdapterView.OnIte
     private final String STATE_SORT_METHOD = "sortMethod";
     private String mCurrentSortMethod;
 
+    private RecyclerView thumbView;
+    private MovieListAdapter movieListAdapter;
+
     @Override
-    public void onCreate(Bundle savedInstanceState)
+    protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list);
         getSupportActionBar().setTitle(R.string.activity_list_title);
+
+        thumbView = (RecyclerView) findViewById(R.id.recyclerview_movies);
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 2);
+        thumbView.setLayoutManager(gridLayoutManager);
+        thumbView.setHasFixedSize(true);
+
+        movieListAdapter = new MovieListAdapter(this, this);
+        thumbView.setAdapter(movieListAdapter);
 
         /* Check if the NetworkConnection is active and connected */
         ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -110,26 +119,12 @@ public class ListActivity extends AppCompatActivity implements AdapterView.OnIte
      */
     private void updateViewWithResults(ArrayList<Movie> movies)
     {
-        GridView thumbView = new GridView(this);
-        thumbView.setNumColumns(2);
-        thumbView.setPadding(0, 0, 0, 0);
-        thumbView.setHorizontalSpacing(0);
-        thumbView.setVerticalSpacing(0);
-        thumbView.setStretchMode(GridView.STRETCH_COLUMN_WIDTH);
-        thumbView.setSaveEnabled(true);
-        thumbView.setOnItemClickListener(this);
-
-        MovieListAdapter movieListAdapter = new MovieListAdapter(this, movies);
-        thumbView.setAdapter(movieListAdapter);
-
-        setContentView(thumbView);
+        movieListAdapter.setData(movies);
     }
 
     @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+    public void onClick(Movie movie)
     {
-        Movie movie = (Movie) parent.getItemAtPosition(position);
-
         Intent intent = new Intent(this, DetailActivity.class);
         intent.putExtra(DetailActivity.EXTRA_PARAM_ID, movie.getId());
 
