@@ -1,13 +1,14 @@
 package es.ibrands.popularmoviesstage1;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
@@ -23,14 +24,10 @@ public class ListActivity extends AppCompatActivity implements MovieListAdapter.
     private static final String TOP_RATED_SORT_METHOD = "top_rated";
     private static final String FAVORITE_MOVIES_METHOD = "favorite";
 
-    private final String SORT_STATE = "sortState";
     private final String POSITION_STATE = "positionState";
 
-    // default sort method
-    private String mCurrentSortMethod;
-
     private MovieListRecyclerView thumbView;
-    // private static Bundle mBundleMovieListRecyclerViewState;
+
     private static Parcelable mLayoutManagerSavedState;
 
     private MovieListAdapter movieListAdapter;
@@ -38,7 +35,9 @@ public class ListActivity extends AppCompatActivity implements MovieListAdapter.
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
+        Log.i("listActivity", "onCreateOptionsMenu");
         getMenuInflater().inflate(R.menu.menu_main, menu);
+
         return true;
     }
 
@@ -47,22 +46,45 @@ public class ListActivity extends AppCompatActivity implements MovieListAdapter.
     {
         int id = item.getItemId();
 
+        String sortMethod = MOST_POPULAR_SORT_METHOD;
         if (id == R.id.top_rated_sort_method) {
-            mCurrentSortMethod = TOP_RATED_SORT_METHOD;
-        } else if (id == R.id.most_popular_sort_method) {
-            mCurrentSortMethod = MOST_POPULAR_SORT_METHOD;
+            sortMethod = TOP_RATED_SORT_METHOD;
         } else if (id == R.id.favorite_movie_method) {
-            mCurrentSortMethod = FAVORITE_MOVIES_METHOD;
+            sortMethod = FAVORITE_MOVIES_METHOD;
         }
+
+        savePreference(sortMethod);
 
         doAction();
 
         return super.onOptionsItemSelected(item);
     }
 
+    private void savePreference(String sortMethod)
+    {
+        Log.i("listActivity", "save preference: " + sortMethod);
+        SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString(getString(R.string.sort_method), sortMethod);
+        editor.commit();
+    }
+
+    private String getPreference(Integer resourceId)
+    {
+        SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
+
+        String defaultSortMethod = MOST_POPULAR_SORT_METHOD;
+        String sortMethod = sharedPref.getString(getString(resourceId), defaultSortMethod);
+
+        return sortMethod;
+    }
+
     private void doAction()
     {
-        new Api().execute(mCurrentSortMethod);
+        String sortMethod = getPreference(R.string.sort_method);
+        savePreference(sortMethod);
+
+        new Api().execute(sortMethod);
     }
 
     private class Api extends AsyncTask<String, Object, Object>
@@ -86,7 +108,6 @@ public class ListActivity extends AppCompatActivity implements MovieListAdapter.
             }
 
             Log.i("listActivity", "doInBackground: " + sortMethod);
-            mCurrentSortMethod = sortMethod;
 
             if (sortMethod == FAVORITE_MOVIES_METHOD) {
                 movies = getFavorites();
@@ -157,7 +178,7 @@ public class ListActivity extends AppCompatActivity implements MovieListAdapter.
     @Override
     protected void onPause()
     {
-        Log.i("listActivity", "onPause: " + mCurrentSortMethod);
+        Log.i("listActivity", "onPause: " + getPreference(R.string.sort_method));
 
         super.onPause();
     }
@@ -165,12 +186,9 @@ public class ListActivity extends AppCompatActivity implements MovieListAdapter.
     @Override
     public void onSaveInstanceState(Bundle outState)
     {
-        Log.i("listActivity", "onSaveInstanceState: " + mCurrentSortMethod);
+        Log.i("listActivity", "onSaveInstanceState: " + getPreference(R.string.sort_method));
 
         outState.putParcelable(POSITION_STATE, thumbView.getLayoutManager().onSaveInstanceState());
-
-        // Save the user's current sort state
-        outState.putString(SORT_STATE, mCurrentSortMethod);
 
         // Always call the superclass so it can save the view hierarchy state
         super.onSaveInstanceState(outState);
@@ -179,7 +197,7 @@ public class ListActivity extends AppCompatActivity implements MovieListAdapter.
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
-        Log.i("listActivity", "onCreate: " + mCurrentSortMethod);
+        Log.i("listActivity", "onCreate: " + getPreference(R.string.sort_method));
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list);
@@ -208,13 +226,12 @@ public class ListActivity extends AppCompatActivity implements MovieListAdapter.
 
     public void onRestoreInstanceState(Bundle savedInstanceState)
     {
-        Log.i("listActivity", "onRestoreInstanceState: " + mCurrentSortMethod);
+        Log.i("listActivity", "onRestoreInstanceState: " + getPreference(R.string.sort_method));
 
         // Always call the superclass so it can restore the view hierarchy
         super.onRestoreInstanceState(savedInstanceState);
 
         // Restore state members from saved instance
-        mCurrentSortMethod = savedInstanceState.getString(SORT_STATE);
 
         mLayoutManagerSavedState = savedInstanceState.getParcelable(POSITION_STATE);
     }
@@ -222,7 +239,7 @@ public class ListActivity extends AppCompatActivity implements MovieListAdapter.
     @Override
     protected void onResume()
     {
-        Log.i("listActivity", "onResume: " + mCurrentSortMethod);
+        Log.i("listActivity", "onResume: " + getPreference(R.string.sort_method));
 
         super.onResume();
 
@@ -233,8 +250,9 @@ public class ListActivity extends AppCompatActivity implements MovieListAdapter.
 
     private void updateSupportBarTitle()
     {
+        String sortMethod = getPreference(R.string.sort_method);
         Integer titleResource = getApplicationContext().getResources().getIdentifier(
-            mCurrentSortMethod + "_sort_method",
+            sortMethod + "_sort_method",
             "string",
             getApplicationContext().getPackageName()
         );
