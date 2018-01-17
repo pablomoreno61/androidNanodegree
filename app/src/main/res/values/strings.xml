@@ -1,11 +1,9 @@
 <resources>
-    <string name="app_name">Popular Stages 1</string>
-    <string name="activity_list_title">Pop Movies</string>
+    <string name="app_name">Popular Stages</string>
     <string name="activity_detail_title">Movie detail</string>
-    <string name="activity_favorite_title">Favorite movies</string>
-    <string name="most_popular_sort_method">Most popular</string>
+    <string name="popular_sort_method">Most popular</string>
     <string name="top_rated_sort_method">Top rated</string>
-    <string name="favorite_movie_method">Favorite movies</string>
+    <string name="favorite_sort_method">Favorite movies</string>
     <string name="movie_thumb_image">Image</string>
     <string name="movie_title">Title</string>
     <string name="movie_description">Description</string>

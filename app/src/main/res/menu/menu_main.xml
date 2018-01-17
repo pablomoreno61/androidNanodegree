@@ -3,7 +3,7 @@
       xmlns:tools="http://schemas.android.com/tools"
       tools:context=".MainActivity">
     <item android:id="@+id/most_popular_sort_method"
-          android:title="@string/most_popular_sort_method"
+          android:title="@string/popular_sort_method"
           android:orderInCategory="100"
           app:showAsAction="never"/>
     <item android:id="@+id/top_rated_sort_method"
@@ -11,7 +11,7 @@
         android:orderInCategory="100"
         app:showAsAction="never"/>
     <item android:id="@+id/favorite_movie_method"
-        android:title="@string/favorite_movie_method"
+        android:title="@string/favorite_sort_method"
         android:orderInCategory="100"
         app:showAsAction="never"/>
 </menu>

@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -27,13 +26,12 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 
 import es.ibrands.popularmoviesstage1.data.FavoriteMovieContract;
-import es.ibrands.popularmoviesstage1.data.FavoriteMovieDbHelper;
 
 public class DetailActivity extends AppCompatActivity
 {
     public static final String EXTRA_PARAM_ID = "es.ibrands.popularmoviesstage1.extra.ID";
 
-    private SQLiteDatabase mDb;
+    private Movie currentMovie;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -41,9 +39,6 @@ public class DetailActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
         getSupportActionBar().setTitle(R.string.activity_detail_title);
-
-        FavoriteMovieDbHelper favoriteMovieDbHelper = new FavoriteMovieDbHelper(this);
-        mDb = favoriteMovieDbHelper.getWritableDatabase();
 
         /* Check if the NetworkConnection is active and connected */
         ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -90,9 +85,12 @@ public class DetailActivity extends AppCompatActivity
     private class Api extends AsyncTask
     {
         @Override
-        protected void onPostExecute(Object result)
+        protected void onPostExecute(Object object)
         {
-            updateViewWithResults((Movie) result);
+            Movie movie = (Movie) object;
+            updateViewWithResults(movie);
+
+            updateSupportBarTitle(movie.getTitle());
         }
 
         @Override
@@ -138,6 +136,8 @@ public class DetailActivity extends AppCompatActivity
             createReviewListView(movie);
 
             changeFavoriteMovieButtonBgColor(movie.getId());
+
+            currentMovie = movie;
         }
     }
 
@@ -309,15 +309,16 @@ public class DetailActivity extends AppCompatActivity
             // to pass the values onto the insert query
             ContentValues contentValues = new ContentValues();
 
-            TextView titleTextView = (TextView) findViewById(R.id.movie_detail_title);
-            String title = titleTextView.getText().toString();
-
             contentValues.put(
                 FavoriteMovieContract.FavoriteMovieEntry.COLUMN_MOVIE_ID, Integer.parseInt(movieId)
             );
 
             contentValues.put(
-                FavoriteMovieContract.FavoriteMovieEntry.COLUMN_TITLE, title
+                FavoriteMovieContract.FavoriteMovieEntry.COLUMN_TITLE, currentMovie.getTitle()
+            );
+
+            contentValues.put(
+                FavoriteMovieContract.FavoriteMovieEntry.COLUMN_POSTER_PATH, currentMovie.getPosterPath()
             );
 
             Uri uri = getContentResolver().insert(
@@ -334,4 +335,11 @@ public class DetailActivity extends AppCompatActivity
             getContentResolver().delete(uri, null, null);
         }
     };
+
+    private void updateSupportBarTitle(String title)
+    {
+        Log.i("detailActivity", "updateSupportBarTitle: " + title);
+
+        getSupportActionBar().setTitle(title);
+    }
 }

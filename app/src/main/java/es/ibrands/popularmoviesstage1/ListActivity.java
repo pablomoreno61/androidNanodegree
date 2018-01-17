@@ -1,19 +1,21 @@
 package es.ibrands.popularmoviesstage1;
 
-import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
+import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import java.util.ArrayList;
+
+import es.ibrands.popularmoviesstage1.data.FavoriteMovieContract;
 
 public class ListActivity extends AppCompatActivity implements MovieListAdapter.MovieListAdapterOnClickHandler
 {
@@ -28,7 +30,8 @@ public class ListActivity extends AppCompatActivity implements MovieListAdapter.
     private String mCurrentSortMethod;
 
     private MovieListRecyclerView thumbView;
-    private static Bundle mBundleMovieListRecyclerViewState;
+    // private static Bundle mBundleMovieListRecyclerViewState;
+    private static Parcelable mLayoutManagerSavedState;
 
     private MovieListAdapter movieListAdapter;
 
@@ -59,17 +62,7 @@ public class ListActivity extends AppCompatActivity implements MovieListAdapter.
 
     private void doAction()
     {
-        if (mCurrentSortMethod == TOP_RATED_SORT_METHOD) {
-            Log.i("listActivity", "doAction top rated");
-            new Api().execute(TOP_RATED_SORT_METHOD);
-        } else if (mCurrentSortMethod == FAVORITE_MOVIES_METHOD) {
-            Log.i("listActivity", "doAction favorites");
-            Intent intent = new Intent(this, FavoriteActivity.class);
-            startActivity(intent);
-        } else {
-            Log.i("listActivity", "doAction popular");
-            new Api().execute(MOST_POPULAR_SORT_METHOD);
-        }
+        new Api().execute(mCurrentSortMethod);
     }
 
     private class Api extends AsyncTask<String, Object, Object>
@@ -78,20 +71,66 @@ public class ListActivity extends AppCompatActivity implements MovieListAdapter.
         protected void onPostExecute(Object result)
         {
             updateViewWithResults((ArrayList<Movie>) result);
+
+            updateSupportBarTitle();
         }
 
         @Override
         protected ArrayList<Movie> doInBackground(String...params)
         {
-            ThemoviedbApi themoviedbApi = new ThemoviedbApi();
+            ArrayList<Movie> movies;
 
             String sortMethod = MOST_POPULAR_SORT_METHOD;
-            if (params.length > 0) {
+            if (params.length > 0 && params[0] != null) {
                 sortMethod = params[0];
             }
 
-            return themoviedbApi.getMovies(sortMethod);
+            Log.i("listActivity", "doInBackground: " + sortMethod);
+            mCurrentSortMethod = sortMethod;
+
+            if (sortMethod == FAVORITE_MOVIES_METHOD) {
+                movies = getFavorites();
+            } else {
+                ThemoviedbApi themoviedbApi = new ThemoviedbApi();
+                movies = themoviedbApi.getMovies(sortMethod);
+            }
+
+            return movies;
         }
+    }
+
+    private ArrayList<Movie> getFavorites()
+    {
+        ArrayList<Movie> movies = new ArrayList<>();
+
+        Cursor mCursor = getContentResolver().query(
+            FavoriteMovieContract.FavoriteMovieEntry.CONTENT_URI,
+            null,
+            null,
+            null,
+            FavoriteMovieContract.FavoriteMovieEntry.COLUMN_TIMESTAMP
+        );
+
+        if (mCursor.getCount() > 0) {
+            ArrayList<String> favorites = new ArrayList<String>();
+
+            for (mCursor.moveToFirst(); !mCursor.isAfterLast(); mCursor.moveToNext()) {
+                Movie movie = new Movie(
+                    "0",
+                    mCursor.getString(mCursor.getColumnIndex(FavoriteMovieContract.FavoriteMovieEntry.COLUMN_MOVIE_ID)),
+                    mCursor.getString(mCursor.getColumnIndex(FavoriteMovieContract.FavoriteMovieEntry.COLUMN_TITLE)),
+                    "",
+                    mCursor.getString(mCursor.getColumnIndex(FavoriteMovieContract.FavoriteMovieEntry.COLUMN_POSTER_PATH)),
+                    ""
+                );
+
+                movies.add(movie);
+            }
+        }
+
+        Log.i("listActivity", String.valueOf(movies.size()));
+
+        return movies;
     }
 
     /* Updates the View with the results. This is called asynchronously when the results are ready.
@@ -100,6 +139,10 @@ public class ListActivity extends AppCompatActivity implements MovieListAdapter.
     private void updateViewWithResults(ArrayList<Movie> movies)
     {
         movieListAdapter.setData(movies);
+        if (mLayoutManagerSavedState != null) {
+            Log.i("listActivity", "updateViewWithResults onRestoreInstanceState");
+            thumbView.getLayoutManager().onRestoreInstanceState(mLayoutManagerSavedState);
+        }
     }
 
     @Override
@@ -117,19 +160,14 @@ public class ListActivity extends AppCompatActivity implements MovieListAdapter.
         Log.i("listActivity", "onPause: " + mCurrentSortMethod);
 
         super.onPause();
-
-        // save RecyclerView state
-        mBundleMovieListRecyclerViewState = new Bundle();
-        Parcelable listState = thumbView.getLayoutManager().onSaveInstanceState();
-        mBundleMovieListRecyclerViewState.putParcelable(POSITION_STATE, listState);
-
-        mBundleMovieListRecyclerViewState.putString(SORT_STATE, mCurrentSortMethod);
     }
-/*
+
     @Override
     public void onSaveInstanceState(Bundle outState)
     {
         Log.i("listActivity", "onSaveInstanceState: " + mCurrentSortMethod);
+
+        outState.putParcelable(POSITION_STATE, thumbView.getLayoutManager().onSaveInstanceState());
 
         // Save the user's current sort state
         outState.putString(SORT_STATE, mCurrentSortMethod);
@@ -137,7 +175,7 @@ public class ListActivity extends AppCompatActivity implements MovieListAdapter.
         // Always call the superclass so it can save the view hierarchy state
         super.onSaveInstanceState(outState);
     }
-*/
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -145,17 +183,29 @@ public class ListActivity extends AppCompatActivity implements MovieListAdapter.
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list);
-        getSupportActionBar().setTitle(R.string.activity_list_title);
 
         thumbView = (MovieListRecyclerView) findViewById(R.id.recyclerview_movies);
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 2);
+
+        int noOfColumns = calculateGridNoOfColumns();
+
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, noOfColumns);
         thumbView.setLayoutManager(gridLayoutManager);
         thumbView.setHasFixedSize(true);
 
         movieListAdapter = new MovieListAdapter(this, this);
+
+        Log.i("listActivity", "onCreate setAdapter");
         thumbView.setAdapter(movieListAdapter);
     }
-/*
+
+    private int calculateGridNoOfColumns()
+    {
+        DisplayMetrics displayMetrics = getApplicationContext().getResources().getDisplayMetrics();
+        float dpWidth = displayMetrics.widthPixels / displayMetrics.density;
+        int scalingFactor = 180;
+        return (int) (dpWidth / scalingFactor);
+    }
+
     public void onRestoreInstanceState(Bundle savedInstanceState)
     {
         Log.i("listActivity", "onRestoreInstanceState: " + mCurrentSortMethod);
@@ -165,8 +215,10 @@ public class ListActivity extends AppCompatActivity implements MovieListAdapter.
 
         // Restore state members from saved instance
         mCurrentSortMethod = savedInstanceState.getString(SORT_STATE);
+
+        mLayoutManagerSavedState = savedInstanceState.getParcelable(POSITION_STATE);
     }
-*/
+
     @Override
     protected void onResume()
     {
@@ -174,26 +226,19 @@ public class ListActivity extends AppCompatActivity implements MovieListAdapter.
 
         super.onResume();
 
-        /* Check if the NetworkConnection is active and connected */
-        ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-
-        // restore RecyclerView state
-        if (mBundleMovieListRecyclerViewState != null) {
-            mCurrentSortMethod = mBundleMovieListRecyclerViewState.getString(SORT_STATE);
-
-            Log.i("listActivity", "onResume mBundleMovieListRecyclerViewState: " + mCurrentSortMethod);
-        }
-
-        if (networkInfo != null && networkInfo.isConnected()) {
+        if (Utility.isConnected(this)) {
             doAction();
-        } else {
-            Log.d("network", getString(R.string.no_internet_connection));
         }
+    }
 
-        if (mBundleMovieListRecyclerViewState != null) {
-            Parcelable listState = mBundleMovieListRecyclerViewState.getParcelable(POSITION_STATE);
-            thumbView.getLayoutManager().onRestoreInstanceState(listState);
-        }
+    private void updateSupportBarTitle()
+    {
+        Integer titleResource = getApplicationContext().getResources().getIdentifier(
+            mCurrentSortMethod + "_sort_method",
+            "string",
+            getApplicationContext().getPackageName()
+        );
+
+        getSupportActionBar().setTitle(titleResource);
     }
 }

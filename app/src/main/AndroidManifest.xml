@@ -22,7 +22,6 @@
         </activity>
         <activity android:name=".DetailActivity" />
         <activity android:name=".ListActivity" />
-        <activity android:name=".FavoriteActivity"></activity>
 
         <provider
             android:name="es.ibrands.popularmoviesstage1.data.FavoriteMovieContentProvider"
